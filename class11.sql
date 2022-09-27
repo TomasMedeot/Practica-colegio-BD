@@ -1,39 +1,66 @@
-ELECT a.postal_code
-FROM address a
-WHERE a.postal_code IN(SELECT a2.address_id
-                        FROM address a2
-                        INNER JOIN staff s USING(address_id))
-ORDER BY postal_code;
+USE sakila;
+SELECT
+    CONCAT(c.first_name, ' ', c.last_name) AS 'Nombre',
+    ad.address,
+    ci.city
+FROM customer c
+    INNER JOIN store sto USING(store_id)
+    INNER JOIN address ad ON sto.address_id = ad.address_id
+    INNER JOIN city ci USING(city_id)
+    INNER JOIN country co USING(country_id)
+WHERE co.country = 'Argentina';
 
-SELECT a.postal_code, ci.city, co.country
-FROM address a
-INNER JOIN city ci USING(city_id)
-INNER JOIN country co USING(country_id)
-WHERE postal_code BETWEEN 10000 AND 30000
-ORDER BY postal_code;
+SELECT
+    CONCAT(c.first_name, ' ', c.last_name) AS 'Nombre',
+    ad.address ci.city
+FROM customer c
+    INNER JOIN address ad USING(address_id)
+    INNER JOIN city ci USING(city_id)
+    INNER JOIN country co USING(country_id)
+WHERE co.country = 'Argentina';
 
+SELECT
+    f.title,
+    l.name,
+    f.rating,
+    CASE
+        WHEN f.rating LIKE 'G' THEN 'All ages admitted'
+        WHEN f.rating LIKE 'PG' THEN 'Some material may not be suitable for children'
+        WHEN f.rating LIKE 'PG-13' THEN 'Some material may be inappropriate for children under 13'
+        WHEN f.rating LIKE 'R' THEN 'Under 17 requires accompanying parent or adult guardian'
+        WHEN f.rating LIKE 'NC-17' THEN 'No one 17 and under admitted'
+    END 'Rating Text'
+FROM film f
+    INNER JOIN language l USING(language_id);
 
-CREATE INDEX postalCode on address(postal_code);
+SELECT
+    ac.actor_id,
+    CONCAT(
+        ac.first_name,
+        ' ',
+        ac.last_name
+    ),
+    f.film_id,
+    f.title
+FROM film f
+    INNER JOIN film_actor USING(film_id)
+    INNER JOIN actor ac USING(actor_id)
+WHERE
+    CONCAT(first_name, ' ', last_name) LIKE TRIM(UPPER('PENELOPE GUINESS'));
 
-SELECT first_name
-FROM actor
-WHERE first_name LIKE "R%"
-ORDER BY first_name;
-
-SELECT last_name
-FROM actor
-WHERE last_name LIKE "%S"
-ORDER BY last_name;
-
-ALTER TABLE film_text 
-ADD FULLTEXT(description);
-
-SELECT description
-FROM film
-WHERE description LIKE "%FAST%"
-ORDER BY description;
-
-SELECT description
-FROM film_text
-WHERE MATCH(description) AGAINST("FAST")
-ORDER BY description;
+SELECT
+    f.title,
+    r.rental_date,
+    c.first_name,
+    CASE
+        WHEN r.return_date IS NOT NULL THEN 'Yes'
+        ELSE 'No'
+    END 'Returned'
+FROM rental r
+    INNER JOIN inventory i USING(inventory_id)
+    INNER JOIN film f USING(film_id)
+    INNER JOIN customer c USING(customer_id)
+WHERE
+    MONTH(r.rental_date) = '05'
+    OR MONTH(r.rental_date) = '06'
+ORDER BY r.rental_date;
